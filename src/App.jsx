@@ -1,65 +1,100 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 
 function App() {
-  useEffect(() => {
-    // Optional: Add GSAP animations or other JavaScript if needed
-  }, []);
+  const [inputText, setInputText] = useState("");
+  const [outputText, setOutputText] = useState("");
+  const [toLang, setToLang] = useState("hi"); // Default to Hindi
+  const [loading, setLoading] = useState(false);
+
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "hi", label: "Hindi" },
+    { code: "fr", label: "French" },
+    { code: "es", label: "Spanish" },
+    { code: "de", label: "German" },
+    { code: "zh-Hans", label: "Chinese (Simplified)" },
+    { code: "ar", label: "Arabic" },
+    { code: "ru", label: "Russian" },
+    { code: "ja", label: "Japanese" },
+    { code: "ko", label: "Korean" },
+    { code: "ta", label: "Tamil" },
+    { code: "te", label: "Telugu" }
+  ];
+
+  const translateText = async () => {
+    if (!inputText.trim()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=${toLang}`,
+        {
+          method: "POST",
+          headers: {
+            "Ocp-Apim-Subscription-Key": "GCi5MAOg2TCUBrj2tDH4HViJrksmKiflgp9ADWpxyU8VxKuHILsuJQQJ99BFAC4f1cMXJ3w3AAAbACOGPE6P",
+            "Ocp-Apim-Subscription-Region": "westus",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify([{ Text: inputText }])
+        }
+      );
+
+      const result = await response.json();
+      setOutputText(result[0]?.translations[0]?.text || "Translation failed.");
+    } catch (error) {
+      console.error("Translation Error:", error);
+      setOutputText("An error occurred. Please try again.");
+    }
+    setLoading(false);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between bg-gray-900 text-white">
-      {/* Header Section */}
-      <header className="w-full text-center p-8">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Mechanical Engineering AI Chatbot</h1>
-        <p className="mt-4 text-lg max-w-2xl mx-auto">
-          The ultimate assistant for all your mechanical engineering questions.
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 text-white flex flex-col items-center p-6">
+      <header className="text-center mt-10 mb-8">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">🌍 AI Translator</h1>
+        <p className="text-lg max-w-xl mx-auto text-gray-300">
+          Translate any text into multiple languages using Microsoft AI.
         </p>
       </header>
 
-      {/* Main Content Section */}
-      <div className="flex flex-col items-center space-y-8">
-        <div className="relative flex items-center justify-center w-full px-4">
-          <div className="absolute inset-0 bg-black opacity-70 rounded-lg"></div>
-          <div className="relative z-10 text-center p-6 md:p-8 max-w-md mx-auto bg-black rounded-lg shadow-2xl">
-            <h2 className="text-2xl md:text-3xl font-semibold text-gray-200 mb-4">
-              Ask Anything About Mechanical Engineering
-            </h2>
-            <p className="text-gray-400 mb-6">
-              Get clear, concise, and accurate answers to your technical questions, anytime, anywhere.
-            </p>
-          </div>
+      <main className="w-full max-w-3xl bg-black bg-opacity-60 rounded-2xl p-8 shadow-2xl">
+        <textarea
+          rows="4"
+          className="w-full p-4 rounded-xl text-black text-lg"
+          placeholder="Enter text here (auto-detect language)"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+        />
+
+        <div className="flex flex-col md:flex-row justify-between items-center mt-6 space-y-4 md:space-y-0 md:space-x-4">
+          <select
+            className="p-3 rounded-xl text-black text-lg w-full md:w-auto"
+            value={toLang}
+            onChange={(e) => setToLang(e.target.value)}
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={translateText}
+            className="bg-indigo-600 hover:bg-indigo-700 transition-all text-white px-6 py-3 rounded-xl font-semibold w-full md:w-auto"
+          >
+            {loading ? "Translating..." : "Translate"}
+          </button>
         </div>
-      </div>
 
-      {/* Iframe Chatbot Embed with Branding Cover */}
-      <div className="fixed bottom-4 right-4 z-50 w-[90%] max-w-[400px]">
-        <div className="relative w-full h-[70vh] md:h-[600px] rounded-xl overflow-hidden shadow-2xl">
-          <iframe 
-            src="https://interfaces.zapier.com/embed/chatbot/cm9ikfav7000rj6uyaflqlpln"
-            allow="clipboard-write *"
-            style={{
-              border: 'none',
-              borderRadius: '12px',
-              width: '100%',
-              height: '100%'
-            }}
-            title="Mechanical Engineering AI Chatbot"
-          ></iframe>
-
-          {/* Overlay to hide Zapier branding */}
-          <div 
-            className="absolute bottom-0 left-0 w-full h-8 bg-gray-900"
-            style={{
-              borderBottomLeftRadius: '12px',
-              borderBottomRightRadius: '12px',
-              zIndex: 10
-            }}
-          ></div>
+        <div className="mt-6 bg-gray-800 p-4 rounded-xl min-h-[80px]">
+          <h2 className="text-lg font-bold mb-2">🔁 Translated Output:</h2>
+          <p className="text-gray-100">{outputText}</p>
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
-      <footer className="w-full bg-black text-white py-6 mt-20 md:mt-60">
-        <p className="text-center text-lg">© 2025 Mechanical Engineering AI Chatbot. All Rights Reserved.</p>
+      <footer className="mt-auto py-6 text-gray-400 text-sm">
+        © 2025 AI Translator | Powered by Microsoft Cognitive Services
       </footer>
     </div>
   );
