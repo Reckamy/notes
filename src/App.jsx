@@ -36,7 +36,7 @@ function App() {
     filterTag === "" ? notes : notes.filter((n) => n.tag === filterTag);
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-black via-gray-900 to-black text-white p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-tr from-white via-gray-900 to-black text-white p-6 flex flex-col items-center">
       <header className="mt-10 mb-6 text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 drop-shadow-lg">
           ✨ My Notes
