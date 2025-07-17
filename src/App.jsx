@@ -1,100 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
-  const [inputText, setInputText] = useState("");
-  const [outputText, setOutputText] = useState("");
-  const [toLang, setToLang] = useState("hi"); // Default to Hindi
-  const [loading, setLoading] = useState(false);
+  const [note, setNote] = useState("");
+  const [notes, setNotes] = useState([]);
 
-  const languages = [
-    { code: "en", label: "English" },
-    { code: "hi", label: "Hindi" },
-    { code: "fr", label: "French" },
-    { code: "es", label: "Spanish" },
-    { code: "de", label: "German" },
-    { code: "zh-Hans", label: "Chinese (Simplified)" },
-    { code: "ar", label: "Arabic" },
-    { code: "ru", label: "Russian" },
-    { code: "ja", label: "Japanese" },
-    { code: "ko", label: "Korean" },
-    { code: "ta", label: "Tamil" },
-    { code: "te", label: "Telugu" }
-  ];
+  // Load notes from localStorage on mount
+  useEffect(() => {
+    const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+    setNotes(savedNotes);
+  }, []);
 
-  const translateText = async () => {
-    if (!inputText.trim()) return;
+  // Update localStorage whenever notes change
+  useEffect(() => {
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }, [notes]);
 
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=${toLang}`,
-        {
-          method: "POST",
-          headers: {
-            "Ocp-Apim-Subscription-Key": "GCi5MAOg2TCUBrj2tDH4HViJrksmKiflgp9ADWpxyU8VxKuHILsuJQQJ99BFAC4f1cMXJ3w3AAAbACOGPE6P",
-            "Ocp-Apim-Subscription-Region": "westus",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify([{ Text: inputText }])
-        }
-      );
+  const addNote = () => {
+    if (note.trim() === "") return;
+    setNotes([...notes, note.trim()]);
+    setNote("");
+  };
 
-      const result = await response.json();
-      setOutputText(result[0]?.translations[0]?.text || "Translation failed.");
-    } catch (error) {
-      console.error("Translation Error:", error);
-      setOutputText("An error occurred. Please try again.");
-    }
-    setLoading(false);
+  const deleteNote = (index) => {
+    const updatedNotes = notes.filter((_, i) => i !== index);
+    setNotes(updatedNotes);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-900 to-black text-white flex flex-col items-center p-6">
-      <header className="text-center mt-10 mb-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-red-500 drop-shadow-lg">AI Translator</h1>
-        <p className="text-lg max-w-xl mx-auto text-gray-300">
-          Translate any text into multiple languages using Microsoft AI.
-        </p>
+    <div className="min-h-screen bg-gradient-to-tr from-black via-gray-900 to-black text-white p-6 flex flex-col items-center">
+      <header className="mt-10 mb-6 text-center">
+        <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 drop-shadow-lg">
+          ✨ My Notes
+        </h1>
+        <p className="text-gray-400 mt-2">Write down anything important 📝</p>
       </header>
 
-      <main className="w-full max-w-3xl bg-black bg-opacity-70 rounded-2xl p-8 shadow-2xl border border-red-600">
-        <textarea
-          rows="4"
-          className="w-full p-4 rounded-xl text-black text-lg"
-          placeholder="Enter text here (auto-detect language)"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-        />
-
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 space-y-4 md:space-y-0 md:space-x-4">
-          <select
-            className="p-3 rounded-xl text-black text-lg w-full md:w-auto border-2 border-red-500"
-            value={toLang}
-            onChange={(e) => setToLang(e.target.value)}
-          >
-            {languages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-
+      <main className="w-full max-w-2xl bg-gray-800 p-6 rounded-2xl shadow-2xl">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Type your note here..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="flex-1 p-3 rounded-xl text-black text-lg outline-none"
+          />
           <button
-            onClick={translateText}
-            className="bg-red-600 hover:bg-red-700 transition-all text-white px-6 py-3 rounded-xl font-semibold w-full md:w-auto shadow-lg"
+            onClick={addNote}
+            className="bg-yellow-500 hover:bg-yellow-600 px-6 py-3 rounded-xl font-bold text-black shadow-md transition-all"
           >
-            {loading ? "Translating..." : "Translate"}
+            Add Note
           </button>
         </div>
 
-        <div className="mt-6 bg-gray-900 p-4 rounded-xl min-h-[80px] border-t-2 border-red-500">
-          <h2 className="text-lg font-bold mb-2 text-red-400">🔁 Translated Output:</h2>
-          <p className="text-gray-100 whitespace-pre-line">{outputText}</p>
+        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {notes.length === 0 ? (
+            <p className="text-gray-400 text-center">No notes yet!</p>
+          ) : (
+            notes.map((n, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center bg-gray-700 p-4 rounded-xl shadow-inner"
+              >
+                <p className="text-lg break-words">{n}</p>
+                <button
+                  onClick={() => deleteNote(i)}
+                  aria-label="Delete Note"
+                  className="text-red-400 hover:text-red-600 ml-4"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </main>
 
-      <footer className="mt-auto py-6 text-gray-500 text-sm">
-        © 2025 RedEdge AI Translator | Powered by Microsoft Cognitive Services
+      <footer className="mt-12 text-sm text-gray-500">
+        © 2025 StickyNote | Built with ❤️ and Tailwind CSS
       </footer>
     </div>
   );
